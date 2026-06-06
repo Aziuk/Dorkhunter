@@ -1,0 +1,18 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Build artifacts
+*.zip
+*.crx
+*.pem
+node_modules/
+
+# Logs
+*.log
