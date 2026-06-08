@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>DorkHunter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css"/>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">DORK<span class="accent">HUNTER</span></span>
+      <span class="ver">v1.0</span>
+    </div>
+    <div class="header-right">
+      <button id="btn-cheatsheet" class="hbtn" title="Operator Cheatsheet">?</button>
+      <button id="btn-builder"    class="hbtn" title="Dork Builder">⚒</button>
+      <button id="btn-export"     class="hbtn" title="Export dorks">⬇</button>
+      <label  class="hbtn"        title="Import dorks">⬆<input type="file" id="import-file" accept=".json" style="display:none"></label>
+      <button id="btn-add"        class="hbtn accent-hbtn" title="Add Dork (press A)">＋</button>
+    </div>
+  </header>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar">
+    <span class="si">⌕</span>
+    <input id="search" type="text" placeholder="Search dorks, tags, queries…" autocomplete="off" spellcheck="false"/>
+    <button id="search-clear" style="display:none">✕</button>
+  </div>
+
+  <!-- ENGINE SELECTOR -->
+  <div class="engine-bar">
+    <span class="engine-label">SEARCH ENGINE</span>
+    <div class="engine-pills" id="engine-pills">
+      <button class="epill active" data-engine="google">Google</button>
+      <button class="epill" data-engine="bing">Bing</button>
+      <button class="epill" data-engine="ddg">DuckDuckGo</button>
+    </div>
+    <span id="engine-note" class="engine-note"></span>
+  </div>
+
+  <!-- CATEGORY TABS -->
+  <div class="cat-bar">
+    <button class="cat-scroll-btn" id="cat-scroll-left">‹</button>
+    <div class="cat-tabs-wrap" id="cat-tabs-wrap">
+      <div class="cat-tabs" id="cat-tabs"></div>
+    </div>
+    <button class="cat-scroll-btn" id="cat-scroll-right">›</button>
+  </div>
+
+  <!-- TAG STRIP -->
+  <div class="tag-bar" id="tag-bar" style="display:none"><div class="tag-strip" id="tag-strip"></div></div>
+
+  <!-- COUNT + TOOLS ROW -->
+  <div class="toolbar">
+    <span id="count-label" class="count-label"></span>
+    <div class="toolbar-right">
+      <button id="btn-manage-cats" class="tbar-btn">⊞ Categories</button>
+    </div>
+  </div>
+
+  <!-- DORK LIST -->
+  <div class="dork-list" id="dork-list"></div>
+
+  <!-- EMPTY STATE -->
+  <div class="empty" id="empty" style="display:none">
+    <div class="empty-hex">⬡</div>
+    <p id="empty-title">No dorks found</p>
+    <small id="empty-sub">Add one or clear filters</small>
+  </div>
+
+  <!-- ═══ PANEL: ADD/EDIT DORK ══════════════════════ -->
+  <div class="overlay" id="ov-edit" style="display:none">
+    <div class="panel">
+      <div class="ph"><span id="edit-title">ADD DORK</span><button class="xbtn" data-close="ov-edit">✕</button></div>
+      <div class="pb">
+        <label>Name <span class="req">*</span></label>
+        <input id="e-name" type="text" placeholder="e.g. Open Directory Listing" autocomplete="off"/>
+        <label>Query <span class="req">*</span></label>
+        <textarea id="e-query" rows="3" placeholder='e.g. intitle:"index of" site:{target}'></textarea>
+        <span class="hint">Use <code>{target}</code> — you'll be prompted before search</span>
+        <label>Description</label>
+        <input id="e-desc" type="text" placeholder="What does this find?" autocomplete="off"/>
+        <label>Category <span class="req">*</span></label>
+        <select id="e-cat"></select>
+        <label>Tags <small>(comma separated)</small></label>
+        <input id="e-tags" type="text" placeholder="e.g. login, exposed, files" autocomplete="off"/>
+        <label>Works best on</label>
+        <div class="engine-check-row" id="e-engines">
+          <label class="echk"><input type="checkbox" value="google" checked> Google</label>
+          <label class="echk"><input type="checkbox" value="bing"> Bing</label>
+          <label class="echk"><input type="checkbox" value="ddg"> DuckDuckGo</label>
+        </div>
+        <div class="pactions">
+          <button class="gbtn" data-close="ov-edit">Cancel</button>
+          <button class="pbtn" id="e-save">Save Dork</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: DORK BUILDER ═══════════════════════ -->
+  <div class="overlay" id="ov-builder" style="display:none">
+    <div class="panel">
+      <div class="ph"><span>DORK BUILDER</span><button class="xbtn" data-close="ov-builder">✕</button></div>
+      <div class="pb">
+        <p class="builder-intro">Combine operators to build your query. Each field is optional.</p>
+
+        <div class="builder-grid">
+          <div class="bg-row">
+            <span class="bg-op">site:</span>
+            <input id="b-site" type="text" placeholder="example.com" autocomplete="off"/>
+            <span class="bg-help">Restrict to a domain</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">filetype:</span>
+            <input id="b-filetype" type="text" placeholder="pdf, sql, env, log…" autocomplete="off"/>
+            <span class="bg-help">Filter by file extension</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">inurl:</span>
+            <input id="b-inurl" type="text" placeholder="admin, login, upload…" autocomplete="off"/>
+            <span class="bg-help">Keyword in URL</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">intitle:</span>
+            <input id="b-intitle" type="text" placeholder='"index of", admin…' autocomplete="off"/>
+            <span class="bg-help">Keyword in page title</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">intext:</span>
+            <input id="b-intext" type="text" placeholder="password, secret…" autocomplete="off"/>
+            <span class="bg-help">Keyword in page body</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">ext:</span>
+            <input id="b-ext" type="text" placeholder="php, asp, jsp…" autocomplete="off"/>
+            <span class="bg-help">URL extension filter</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">-inurl:</span>
+            <input id="b-excl" type="text" placeholder="htm, html (exclude)" autocomplete="off"/>
+            <span class="bg-help">Exclude from URL</span>
+          </div>
+          <div class="bg-row">
+            <span class="bg-op">"…"</span>
+            <input id="b-exact" type="text" placeholder='Exact phrase to match' autocomplete="off"/>
+            <span class="bg-help">Exact phrase match</span>
+          </div>
+          <div class="bg-row full-row">
+            <span class="bg-op">+ extra</span>
+            <input id="b-extra" type="text" placeholder="Any raw operators to append" autocomplete="off" style="flex:1"/>
+          </div>
+        </div>
+
+        <div class="builder-preview">
+          <span class="bp-label">PREVIEW</span>
+          <div id="b-preview" class="bp-query">—</div>
+        </div>
+
+        <div class="pactions">
+          <button class="gbtn" id="b-clear">Clear</button>
+          <button class="gbtn" id="b-save-as">Save as Dork</button>
+          <button class="pbtn" id="b-run">▶ Search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: CHEATSHEET ═════════════════════════ -->
+  <div class="overlay" id="ov-cheat" style="display:none">
+    <div class="panel">
+      <div class="ph"><span>OPERATOR CHEATSHEET</span><button class="xbtn" data-close="ov-cheat">✕</button></div>
+      <div class="pb">
+        <div class="cs-section">
+          <div class="cs-head">CORE OPERATORS</div>
+          <div class="cs-grid" id="cs-core"></div>
+        </div>
+        <div class="cs-section">
+          <div class="cs-head">COMBINATION EXAMPLES</div>
+          <div class="cs-examples" id="cs-examples"></div>
+        </div>
+        <div class="cs-section">
+          <div class="cs-head">TIPS</div>
+          <ul class="cs-tips" id="cs-tips"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: TARGET INPUT ═══════════════════════ -->
+  <div class="overlay" id="ov-target" style="display:none">
+    <div class="panel small-panel">
+      <div class="ph"><span>SET TARGET</span><button class="xbtn" data-close="ov-target">✕</button></div>
+      <div class="pb">
+        <div id="target-preview" class="bp-query" style="margin-bottom:8px"></div>
+        <label>Target domain / keyword</label>
+        <input id="target-input" type="text" placeholder="e.g. example.com" autocomplete="off"/>
+        <!-- recent targets -->
+        <div id="recent-targets" class="recent-targets"></div>
+        <div class="pactions">
+          <button class="gbtn" data-close="ov-target">Cancel</button>
+          <button class="pbtn" id="t-run">▶ Search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: MANAGE CATEGORIES ═════════════════ -->
+  <div class="overlay" id="ov-cats" style="display:none">
+    <div class="panel">
+      <div class="ph"><span>MANAGE CATEGORIES</span><button class="xbtn" data-close="ov-cats">✕</button></div>
+      <div class="pb">
+        <div class="cat-add-row">
+          <input id="new-cat" type="text" placeholder="New category name…" autocomplete="off"/>
+          <button class="pbtn small" id="cat-add-btn">Add</button>
+        </div>
+        <ul class="mcat-list" id="mcat-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
